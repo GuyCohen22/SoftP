@@ -63,25 +63,24 @@ def main():
     # Validate argmument count
     if len(args) not in [1, 2]:
         error_exit()
-
+    
     # Validate k is a natural number
-    if not args[0].isdigit():
-        print("Incorrect number of clusters!")
-        sys.exit(1)
-        
     try:
-        k = int(args[0])
+        k_float = float(args[0])
+        if not k_float.is_integer():
+            raise ValueError
+        k = int(k_float)
     except ValueError:
         print("Incorrect number of clusters!")
         sys.exit(1)
 
     # Validate iter is a natural number
     if len(args) == 2:
-        if not args[1].isdigit():
-            print("Incorrect maximum iteration!")
-            sys.exit(1)
         try:
-            maximum_iteration = int(args[1])
+            iter_float = float(args[1])
+            if not iter_float.is_integer():
+                raise ValueError
+            maximum_iteration = int(iter_float)
         except ValueError:
             print("Incorrect maximum iteration!")
             sys.exit(1)
