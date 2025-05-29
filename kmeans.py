@@ -57,12 +57,50 @@ def error_exit():
         sys.exit(1)
 
 def main():
-    # Process and Validate points
-    points = []
+
+    args = sys.argv[1:]
+
+    # Validate argmument count
+    if len(args) not in [1, 2]:
+        error_exit()
+
+    # Validate k is a natural number
+    if not args[0].isdigit():
+        print("Incorrect number of clusters!")
+        sys.exit(1)
+        
+    try:
+        k = int(args[0])
+    except ValueError:
+        print("Incorrect number of clusters!")
+        sys.exit(1)
+
+    # Validate iter is a natural number
+    if len(args) == 2:
+        if not args[1].isdigit():
+            print("Incorrect maximum iteration!")
+            sys.exit(1)
+        try:
+            maximum_iteration = int(args[1])
+        except ValueError:
+            print("Incorrect maximum iteration!")
+            sys.exit(1)
+    else:
+        maximum_iteration = DEFAULT_ITER
+
+    # VaValidate 1 < iter < 1000
+    if not 1 < maximum_iteration < 1000:
+        print("Incorrect maximum iteration!")
+        sys.exit(1)
+
+    # Process and Validate datapoints
+    datapoints = []
+    d = None
     for line in sys.stdin:
         line = line.strip()
-        if line == '':
+        if line == "":
             break
+
         try:
             point = list(map(float, line.split(',')))
             if len(point) == 0:
@@ -70,42 +108,26 @@ def main():
         except ValueError:
             print("An Error Has Occurred")
             sys.exit(1)
-        points.append(point)
 
-    # Check that input is not empty
-    if len(points) == 0:
-        print("An Error Has Occurred")
-        sys.exit(1)
+        if d is None:
+            d = len(point)
+        elif len(point) != d:
+            print("An Error Has Occurred")
+            sys.exit(1)
 
-    N = len(points)
+        datapoints.append(point)
 
-    # Validate argmument count
-    if sys.argv != 3:
-        error_exit()
-
-    # Validate K
-    if not sys.argv[1].isdigit():
+    if not len(datapoints) > k:
         print("Incorrect number of clusters!")
         sys.exit(1)
+
+    # Calculate centroids using k-means algorithm
+    centroids = calculate_centroids_using_kmeans(k, maximum_iteration, datapoints)
+
+    for centroid in centroids:
+        print(','.join(f'{coord:.4f}' for coord in centroid))
         
-    try:
-        K = int(sys.argv[1])
-    except ValueError:
-        print("Incorrect number of clusters!")
-        sys.exit(1)
-
-    # if not 1 < K < N:
-
-
-
-    # Validate iter
-    if not sys.argv[2].isdigit():
-        print("Incorrect maximum iteration!")
-    try:
-        iter = int(sys.argv[2])
-    except ValueError:
-        print("Incorrect maximum iteration!")
-        sys.exit(1)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
