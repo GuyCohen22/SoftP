@@ -1,57 +1,112 @@
-import sys
+import sys, math
+EPSILON = 0.001
+DEFAULT_ITER = 400
 
-# Process and Validate points
-points = []
-for line in sys.stdin:
-    line = line.strip()
-    if line == '':
-        break
-    try:
-        point = list(map(float, line.split(',')))
-        if len(point) == 0:
-            raise ValueError
-    except ValueError:
-        print("An Error Has Occurred")
-        sys.exit(1)
-    points.append(point)
+def calculate_euclidean_distance(p, q):
+    """ Returns the Euclidean distance between two points p and q. """
+    return math.sqrt(sum((p_i - q_i) ** 2 for p_i, q_i in zip(p, q)))
+    
+def assign_clusters(k, datapoints, centroids):
+    """ Returns array assignments where assignments[i] stores the index of the cluster datapoints[i] is assigned to. """
+    return [min(range(k), key=lambda i: calculate_euclidean_distance(datapoint, centroids[i])) for datapoint in datapoints]
 
-# Check that input is not empty
-if len(points) == 0:
-    print("An Error Has Occurred")
-    sys.exit(1)
+def calculate_updated_centroids(k, d, datapoints, assignments, old_centroids):
+    """
+    Returns the updated centroids.
+    If a centroid is empty, the previous centroid is reused.
+    """
+    updated_centroids = [[0.0] * d for _ in range(k)] 
+    counts = [0] * k
 
-N = len(points)
+    for point, cluster_index in zip(datapoints, assignments):
+        for i in range(d):
+            updated_centroids[cluster_index][i] += point[i]
+        counts[cluster_index] += 1
+
+    for i in range(k):
+        if counts[i] == 0:
+            # Reuse old centroid
+            updated_centroids[i] = old_centroids[i][:] 
+        else:
+            updated_centroids[i] = [x / counts[i] for x in updated_centroids[i]]
+    
+    return updated_centroids
+
+def calculate_centroids_using_kmeans(k, maximum_iteration, datapoints):
+    """ Returns centroids calculated using the k-means algorithm. """
+    n, d = len(datapoints), len(datapoints[0])
+    previous_centroids = [[float('inf')] * d for _ in range(k)]
+    centroids = [datapoints[i][:] for i in range(k)]
+    assignments = [0] * n
+
+    for i in range(maximum_iteration):
+        if all(calculate_euclidean_distance(curr, prev) < EPSILON for curr, prev in zip(previous_centroids, centroids)):
+            break
+        
+        previous_centroids = [centroid[:] for centroid in centroids]
+        
+        assignments = assign_clusters(k, datapoints, centroids)
+
+        centroids = calculate_updated_centroids(k, d, datapoints, assignments, previous_centroids)
+
+    return centroids
+
 
 def error_exit():
-    print("An Error Has Occurred")
-    sys.exit(1)
+        print("An Error Has Occurred")
+        sys.exit(1)
 
-# Validate argmument count
-if sys.argv != 3:
-    error_exit()
+def main():
+    # Process and Validate points
+    points = []
+    for line in sys.stdin:
+        line = line.strip()
+        if line == '':
+            break
+        try:
+            point = list(map(float, line.split(',')))
+            if len(point) == 0:
+                raise ValueError
+        except ValueError:
+            print("An Error Has Occurred")
+            sys.exit(1)
+        points.append(point)
 
-# Validate K
-if not sys.argv[1].isdigit():
-    print("Incorrect number of clusters!")
-    sys.exit(1)
-    
-try:
-    K = int(sys.argv[1])
-except ValueError:
-    print("Incorrect number of clusters!")
-    sys.exit(1)
+    # Check that input is not empty
+    if len(points) == 0:
+        print("An Error Has Occurred")
+        sys.exit(1)
 
-# if not 1 < K < N:
+    N = len(points)
+
+    # Validate argmument count
+    if sys.argv != 3:
+        error_exit()
+
+    # Validate K
+    if not sys.argv[1].isdigit():
+        print("Incorrect number of clusters!")
+        sys.exit(1)
+        
+    try:
+        K = int(sys.argv[1])
+    except ValueError:
+        print("Incorrect number of clusters!")
+        sys.exit(1)
+
+    # if not 1 < K < N:
 
 
 
-# Validate iter
-if not sys.argv[2].isdigit():
-    print("Incorrect maximum iteration!")
-try:
-    iter = int(sys.argv[2])
-except ValueError:
-    print("Incorrect maximum iteration!")
-    sys.exit(1)
+    # Validate iter
+    if not sys.argv[2].isdigit():
+        print("Incorrect maximum iteration!")
+    try:
+        iter = int(sys.argv[2])
+    except ValueError:
+        print("Incorrect maximum iteration!")
+        sys.exit(1)
 
 
+if __name__ == "__main__":
+    main()
