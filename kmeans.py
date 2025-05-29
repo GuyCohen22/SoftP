@@ -124,6 +124,7 @@ def main():
     # Calculate centroids using k-means algorithm
     centroids = calculate_centroids_using_kmeans(k, maximum_iteration, datapoints)
 
+    # Print centroids formatted to 4 decimal places
     for centroid in centroids:
         print(','.join(f'{coord:.4f}' for coord in centroid))
         
