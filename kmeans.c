@@ -67,14 +67,20 @@ void free_matrix(Vector *head_vector) {
 
 /* Frees all memory allocated for a coordinate list starting from the given head */
 void free_curr_coordinates(Coordinate *head_coordinate) {
-    
+    Coordinate *coordinate_to_free;
+
+    while (head_coordinate != NULL) {
+        coordinate_to_free = head_coordinate;
+        head_coordinate = head_coordinate->next;
+        free(coordinate_to_free);
+    }
 }
 
-/* */
-void process_and_validate_datapoints(Vector **head_vector, int *num_vectors, int *dimension) {
-    Vector *local_head_vector, *curr_vector, *next_vector;
-    Coordinate *head_coordinate, *curr_coordinate, *next_coordinate;
-    int i, j, rows, cols;
+/* Reads datapoints from stdin, builds a linked list matrix, and sets the number of vectors and dimension */
+void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) {
+    Vector *local_head_vector, *curr_vector;
+    Coordinate *head_coordinate, *curr_coordinate;
+    int rows = 0, cols = 0, cols_count = 1;
     double n;
     char c;
 
@@ -99,18 +105,48 @@ void process_and_validate_datapoints(Vector **head_vector, int *num_vectors, int
 
         if (c == '\n') {
             curr_coordinate->value = n;
+            if (rows == 0) {
+                cols = cols_count;
+            }
             curr_vector->coordinates = head_coordinate;
             curr_vector->next = malloc(sizeof(Vector));
             if (curr_vector->next == NULL) {
                 free_matrix(local_head_vector);
+                printf("An Error Has Occurred\n");
+                exit(1);
             }
+            curr_vector = curr_vector->next;
+            curr_vector->next = NULL;
+            head_coordinate = malloc(sizeof(Coordinate));
+            if (head_coordinate == NULL) {
+                free_matrix(local_head_vector);
+                printf("An Error Has Occurred\n");
+                exit(1);
+            }
+            curr_coordinate = head_coordinate;
+            curr_coordinate->next = NULL;
+            rows++;
+            cols_count = 1;
+            continue;
         }
 
+        curr_coordinate->value = n;
+        curr_coordinate->next = malloc(sizeof(Coordinate));
+        if (curr_coordinate->next == NULL) {
+                free_matrix(local_head_vector);
+                free_curr_coordinates(head_coordinate);
+                printf("An Error Has Occurred\n");
+                exit(1);
+            }
+        curr_coordinate = curr_coordinate->next;
+        curr_coordinate->next = NULL;
+        cols_count++;
     }
 
-
-
-    
+    *head_vector = local_head_vector;
+    *num_vectors = rows;
+    *dimension = cols;
+    free(head_coordinate);
 }
 
 
@@ -165,7 +201,13 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    process_and_validate_datapoints(&head_vector, &num_vectors, &dimension);
+    process_datapoints(&head_vector, &num_vectors, &dimension);
+
+    if (!(k < num_vectors)) {
+        printf("Incorrect number of clusters!\n");
+        free_matrix(head_vector);
+        exit(1);
+    }
 
 
 
