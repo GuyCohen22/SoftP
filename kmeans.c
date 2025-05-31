@@ -14,7 +14,7 @@ typedef struct coordinate {
 typedef struct vector
 {
     struct vector *next;
-    struct coordinate *coordinates;
+    Coordinate *coordinates;
 } Vector;
 
 /* Returns 1 if a string is a natural number and 0 otherwise. accepts 81.0 as a natural number according to forum clarification */
@@ -45,7 +45,33 @@ int is_natural_number(const char *str) {
     return i >= 1;
 }
 
-void process_and_validate_datapoints(Vector **head_vector, int *num_vectors, int *dimention) {
+/* Frees the entire memory allocated to the matrix */
+void free_matrix(Vector *head_vector) {
+    Vector *vector_to_free;
+    Coordinate *curr_coordinate, *coordinate_to_free;
+
+    while (head_vector != NULL) {
+        curr_coordinate = head_vector->coordinates;
+
+        while (curr_coordinate != NULL) {
+            coordinate_to_free = curr_coordinate;
+            curr_coordinate = curr_coordinate->next;
+            free(coordinate_to_free);
+        }
+
+        vector_to_free = head_vector;
+        head_vector = head_vector->next;
+        free(vector_to_free);
+    }
+}
+
+/* Frees all memory allocated for a coordinate list starting from the given head */
+void free_curr_coordinates(Coordinate *head_coordinate) {
+    
+}
+
+/* */
+void process_and_validate_datapoints(Vector **head_vector, int *num_vectors, int *dimension) {
     Vector *local_head_vector, *curr_vector, *next_vector;
     Coordinate *head_coordinate, *curr_coordinate, *next_coordinate;
     int i, j, rows, cols;
@@ -72,7 +98,12 @@ void process_and_validate_datapoints(Vector **head_vector, int *num_vectors, int
     while (scanf("%lf%c", &n, &c) == 2) {
 
         if (c == '\n') {
-            
+            curr_coordinate->value = n;
+            curr_vector->coordinates = head_coordinate;
+            curr_vector->next = malloc(sizeof(Vector));
+            if (curr_vector->next == NULL) {
+                free_matrix(local_head_vector);
+            }
         }
 
     }
@@ -103,7 +134,7 @@ double calculate_euclidean_distance(Vector *v1, Vector *v2) {
 
 int main(int argc, char **argv) {
     int k, maximum_iteration;
-    int num_vectors, dimention;
+    int num_vectors, dimension;
     Vector *head_vector;
 
     /* Validate argument count */
@@ -134,7 +165,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    process_and_validate_datapoints(&head_vector, &num_vectors, &dimention);
+    process_and_validate_datapoints(&head_vector, &num_vectors, &dimension);
 
 
 
