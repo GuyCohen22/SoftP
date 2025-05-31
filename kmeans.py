@@ -87,7 +87,7 @@ def main():
     else:
         maximum_iteration = DEFAULT_ITER
 
-    # VaValidate 1 < iter < 1000
+    # Validate 1 < iter < 1000
     if not 1 < maximum_iteration < 1000:
         print("Incorrect maximum iteration!")
         sys.exit(1)
