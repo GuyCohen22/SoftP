@@ -84,7 +84,7 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
     double n;
     char c;
 
-    head_coordinate = malloc(sizeof(Coordinate));
+    head_coordinate = calloc(1, sizeof(Coordinate));
     if (head_coordinate == NULL) {
         printf("An Error Has Occurred\n");
         exit(1);
@@ -92,7 +92,7 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
     curr_coordinate = head_coordinate;
     curr_coordinate->next = NULL;
 
-    local_head_vector = malloc(sizeof(Vector));
+    local_head_vector = calloc(1, sizeof(Vector));
     if (local_head_vector == NULL) {
         free(head_coordinate);
         printf("An Error Has Occurred\n");
@@ -109,7 +109,7 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
                 cols = cols_count;
             }
             curr_vector->coordinates = head_coordinate;
-            curr_vector->next = malloc(sizeof(Vector));
+            curr_vector->next = calloc(1, sizeof(Vector));
             if (curr_vector->next == NULL) {
                 free_matrix(local_head_vector);
                 printf("An Error Has Occurred\n");
@@ -117,7 +117,7 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
             }
             curr_vector = curr_vector->next;
             curr_vector->next = NULL;
-            head_coordinate = malloc(sizeof(Coordinate));
+            head_coordinate = calloc(1, sizeof(Coordinate));
             if (head_coordinate == NULL) {
                 free_matrix(local_head_vector);
                 printf("An Error Has Occurred\n");
@@ -131,7 +131,7 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
         }
 
         curr_coordinate->value = n;
-        curr_coordinate->next = malloc(sizeof(Coordinate));
+        curr_coordinate->next = calloc(1, sizeof(Coordinate));
         if (curr_coordinate->next == NULL) {
                 free_matrix(local_head_vector);
                 free_curr_coordinates(head_coordinate);
@@ -148,8 +148,17 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
     *dimension = cols;
     free(head_coordinate);
 }
+/* Allocates and returns a linked list of k centroids, each with the given dimension. returns NULL on failure. */
+void init_centroids_matrix(int k, int dimension) {
+    Vector *head_vector, *curr_vector;
+    Coordinate head_coordinate, *curr_coordinate;
 
+    head_vector = calloc(1, sizeof(Vector));
+    if (head_vector == NULL) {
+        return NULL;
+    }
 
+}
 
 
 /*  Returns the Euclidean distance between two vectors */
@@ -171,7 +180,7 @@ double calculate_euclidean_distance(Vector *v1, Vector *v2) {
 int main(int argc, char **argv) {
     int k, maximum_iteration;
     int num_vectors, dimension;
-    Vector *head_vector;
+    Vector *head_vector, *prev_centroids, *curr_centroids, *result_centroids;
 
     /* Validate argument count */
     if (argc != 2 && argc != 3) {
@@ -203,12 +212,14 @@ int main(int argc, char **argv) {
 
     process_datapoints(&head_vector, &num_vectors, &dimension);
 
-    if (!(k < num_vectors)) {
+    if (!(1 < k && k < num_vectors)) {
         printf("Incorrect number of clusters!\n");
         free_matrix(head_vector);
         exit(1);
     }
 
+    prev_centroids = init_centroids_matrix(k, dimension);
+    curr_centroids = init_centroids_matrix(k, dimension);
 
 
     return 0;

@@ -116,7 +116,7 @@ def main():
 
         datapoints.append(point)
 
-    if not len(datapoints) > k:
+    if not 1 < k < len(datapoints):
         print("Incorrect number of clusters!")
         sys.exit(1)
 
