@@ -17,7 +17,7 @@ typedef struct vector
     Coordinate *coordinates;
 } Vector;
 
-/* Returns 1 if a string is a natural number and 0 otherwise. accepts 81.0 as a natural number according to forum clarification */
+/* Returns 1 if a string is a natural number and 0 otherwise. accepts X.0 as a natural number according to forum clarification */
 int is_natural_number(const char *str) {
     int i = 0;
     int dot_seen = 0;
@@ -149,15 +149,46 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
     free(head_coordinate);
 }
 /* Allocates and returns a linked list of k centroids, each with the given dimension. returns NULL on failure. */
-void init_centroids_matrix(int k, int dimension) {
+Vector *init_centroids_matrix(int k, int dimension) {
     Vector *head_vector, *curr_vector;
-    Coordinate head_coordinate, *curr_coordinate;
+    Coordinate *head_coordinate, *curr_coordinate;
 
     head_vector = calloc(1, sizeof(Vector));
     if (head_vector == NULL) {
         return NULL;
     }
+    curr_vector = head_vector;
 
+    for (int i = 0; i < k; i++) {
+        head_coordinate = calloc(1, sizeof(Coordinate));
+        if (head_coordinate == NULL) {
+            free_matrix(head_vector);
+            return NULL;
+        }
+        curr_coordinate = head_coordinate;
+
+        for (int j = 1; j < dimension; j++) {
+            curr_coordinate->next = calloc(1, sizeof(Coordinate));
+            if (curr_coordinate->next == NULL) {
+                free_matrix(head_vector);
+                free_curr_coordinates(head_coordinate);
+                return NULL;
+            }
+            curr_coordinate = curr_coordinate->next;
+        }
+
+        curr_vector->coordinates = head_coordinate;
+
+        if (i != k - 1) {
+            curr_vector->next = calloc(1, sizeof(Vector));
+            if (curr_vector->next == NULL) {
+                free_matrix(head_vector);
+                return NULL;
+            }
+            curr_vector = curr_vector->next;
+        }
+    }
+    return head_vector;
 }
 
 
