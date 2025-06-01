@@ -276,13 +276,21 @@ Vector *calculate_centroids_using_kmeans(int k, int maximum_iteration, int num_v
     
 }
 
-void print_matrix(Vector *result_centroids) {
+/* Prints the centroids matrix in the required format */
+void print_result(Vector *result_centroids) {
     Vector *curr_vector = result_centroids;
     Coordinate *curr_coordinate;
-    
-    while ()
-
+    while (curr_vector != NULL) {
+        curr_coordinate = curr_vector->coordinates;
+        while (curr_coordinate != NULL) {
+            printf("%.4f", curr_coordinate->value);
+            if (curr_coordinate->next != NULL) printf(",");
+            curr_coordinate = curr_coordinate->next;
+        }
+        printf("\n");
+        curr_vector = curr_vector->next;
     }
+}
 
 int main(int argc, char **argv) {
     int k, maximum_iteration;
@@ -341,6 +349,6 @@ int main(int argc, char **argv) {
     }
 
     result_centroids = calculate_centroids_using_kmeans();
-
+    print_result(result_centroids);
     return 0;
 }
