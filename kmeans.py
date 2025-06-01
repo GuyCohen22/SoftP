@@ -40,7 +40,7 @@ def calculate_centroids_using_kmeans(k, maximum_iteration, datapoints):
     assignments = [0] * n
 
     for i in range(maximum_iteration):
-        if all(calculate_euclidean_distance(curr, prev) < EPSILON for curr, prev in zip(previous_centroids, centroids)):
+        if all(calculate_euclidean_distance(curr, prev) < EPSILON for curr, prev in zip(centroids, previous_centroids)):
             break
         
         previous_centroids = [centroid[:] for centroid in centroids]

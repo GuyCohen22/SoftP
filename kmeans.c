@@ -208,10 +208,87 @@ double calculate_euclidean_distance(Vector *v1, Vector *v2) {
     return sqrt(sum);
 }
 
+/* Initializes the centroids matrix with the first k datapoints */
+void init_centroids_as_first_k_datapoints(Vector *datapoints, Vector *centroids, int k, int dimension){
+    Vector *datapoints_curr_vector = datapoints, *centroids_curr_vector = centroids;
+    Coordinate *datapoints_curr_coordinate, *centroids_curr_coordinate;
+
+    for(int i = 0; i < k; i++) {
+        datapoints_curr_coordinate = datapoints_curr_vector->coordinates;
+        centroids_curr_coordinate = centroids_curr_vector->coordinates;
+        for(int j = 0; j < dimension; j++) {
+            centroids_curr_coordinate->value = datapoints_curr_coordinate->value;
+            datapoints_curr_coordinate = datapoints_curr_coordinate->next;
+            centroids_curr_coordinate = centroids_curr_coordinate->next;
+        }
+        datapoints_curr_vector = datapoints_curr_vector->next;
+        centroids_curr_vector = centroids_curr_vector->next;
+    }
+}
+
+/* Sets all values in the centroids matrix to 0 */
+void zero_out_centroids(Vector *centroids, int k, int dimension) {
+    Vector *curr_vector = centroids;
+    Coordinate *curr_coordinate;
+
+    for (int i = 0; i < k; i++) {
+        curr_coordinate = curr_vector->coordinates;
+        for (int j = 0; j < dimension; j++) {
+            curr_coordinate->value = 0.0;
+            curr_coordinate = curr_coordinate->next;
+        }
+        curr_vector = curr_vector->next;
+    }
+}
+
+/* Returns 1 if the centroids have converged, 0 otherwise */
+int has_converged(Vector *prev_centroids, Vector *curr_centroids, int k) {
+    Vector *local_prev_centroids = prev_centroids, *local_curr_centroids = curr_centroids;
+    double curr_distance;
+
+    for(int i = 0; i < k; i++) {
+        curr_distance = calculate_euclidean_distance(local_prev_centroids, local_curr_centroids);
+        if (curr_distance >= EPSILON) return 0;
+        local_prev_centroids = local_prev_centroids->next;
+        local_curr_centroids = local_curr_centroids->next;
+    }
+
+    return 1;
+}
+
+/* Returns centroids calculated using the k-means algorithm */
+Vector *calculate_centroids_using_kmeans(int k, int maximum_iteration, int num_vectors, int dimension, Vector *datapoints, Vector *prev_centroids, Vector *curr_centroids, int *assignments, int*counts) {
+
+    Vector *temp_centroids, *local_prev_centroids = prev_centroids, *local_curr_centroids = curr_centroids;
+    int has_converged, iteration_cnt = 0;
+
+    init_centroids_as_first_k_datapoints(datapoints, local_prev_centroids, k, dimension);
+
+    do
+    {
+        memset(assignments, 0, sizeof(int) * num_vectors);
+        memset(counts, 0, sizeof(int) * k);
+        zero_out_centroids(local_curr_centroids, k, dimension);
+
+
+        
+    } while (condition);
+    
+}
+
+void print_matrix(Vector *result_centroids) {
+    Vector *curr_vector = result_centroids;
+    Coordinate *curr_coordinate;
+    
+    while ()
+
+    }
+
 int main(int argc, char **argv) {
     int k, maximum_iteration;
     int num_vectors, dimension;
-    Vector *head_vector, *prev_centroids, *curr_centroids, *result_centroids;
+    Vector *datapoints, *prev_centroids, *curr_centroids, *result_centroids;
+    int *assignments, *counts;
 
     /* Validate argument count */
     if (argc != 2 && argc != 3) {
@@ -241,17 +318,29 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    process_datapoints(&head_vector, &num_vectors, &dimension);
+    process_datapoints(&datapoints, &num_vectors, &dimension);
 
     if (!(1 < k && k < num_vectors)) {
         printf("Incorrect number of clusters!\n");
-        free_matrix(head_vector);
+        free_matrix(datapoints);
         exit(1);
     }
 
     prev_centroids = init_centroids_matrix(k, dimension);
     curr_centroids = init_centroids_matrix(k, dimension);
+    assignments = calloc(num_vectors, sizeof(int));
+    counts = calloc(k, sizeof(int));
+    if (prev_centroids == NULL || curr_centroids == NULL || assignments == NULL || counts == NULL) {
+        free_matrix(datapoints);
+        free_matrix(prev_centroids);
+        free_matrix(curr_centroids);
+        free(assignments);
+        free(counts);
+        printf("An Error Has Occurred\n");
+        exit(1);
+    }
 
+    result_centroids = calculate_centroids_using_kmeans();
 
     return 0;
 }
