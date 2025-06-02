@@ -152,6 +152,7 @@ void process_datapoints(Vector **head_vector, int *num_vectors, int *dimension) 
 Vector *init_centroids_matrix(int k, int dimension) {
     Vector *head_vector, *curr_vector;
     Coordinate *head_coordinate, *curr_coordinate;
+    int i, j;
 
     head_vector = calloc(1, sizeof(Vector));
     if (head_vector == NULL) {
@@ -159,7 +160,7 @@ Vector *init_centroids_matrix(int k, int dimension) {
     }
     curr_vector = head_vector;
 
-    for (int i = 0; i < k; i++) {
+    for (i = 0; i < k; i++) {
         head_coordinate = calloc(1, sizeof(Coordinate));
         if (head_coordinate == NULL) {
             free_matrix(head_vector);
@@ -167,7 +168,7 @@ Vector *init_centroids_matrix(int k, int dimension) {
         }
         curr_coordinate = head_coordinate;
 
-        for (int j = 1; j < dimension; j++) {
+        for (j = 1; j < dimension; j++) {
             curr_coordinate->next = calloc(1, sizeof(Coordinate));
             if (curr_coordinate->next == NULL) {
                 free_matrix(head_vector);
@@ -212,11 +213,12 @@ double calculate_euclidean_distance(Vector *v1, Vector *v2) {
 void init_centroids_as_first_k_datapoints(Vector *datapoints, Vector *centroids, int k, int dimension){
     Vector *datapoints_curr_vector = datapoints, *centroids_curr_vector = centroids;
     Coordinate *datapoints_curr_coordinate, *centroids_curr_coordinate;
+    int i, j;
 
-    for(int i = 0; i < k; i++) {
+    for (i = 0; i < k; i++) {
         datapoints_curr_coordinate = datapoints_curr_vector->coordinates;
         centroids_curr_coordinate = centroids_curr_vector->coordinates;
-        for(int j = 0; j < dimension; j++) {
+        for (j = 0; j < dimension; j++) {
             centroids_curr_coordinate->value = datapoints_curr_coordinate->value;
             datapoints_curr_coordinate = datapoints_curr_coordinate->next;
             centroids_curr_coordinate = centroids_curr_coordinate->next;
@@ -230,10 +232,11 @@ void init_centroids_as_first_k_datapoints(Vector *datapoints, Vector *centroids,
 void zero_out_centroids(Vector *centroids, int k, int dimension) {
     Vector *curr_vector = centroids;
     Coordinate *curr_coordinate;
+    int i, j;
 
-    for (int i = 0; i < k; i++) {
+    for (i = 0; i < k; i++) {
         curr_coordinate = curr_vector->coordinates;
-        for (int j = 0; j < dimension; j++) {
+        for (j = 0; j < dimension; j++) {
             curr_coordinate->value = 0.0;
             curr_coordinate = curr_coordinate->next;
         }
@@ -245,8 +248,9 @@ void zero_out_centroids(Vector *centroids, int k, int dimension) {
 int has_converged(Vector *prev_centroids, Vector *curr_centroids, int k) {
     Vector *local_prev_centroids = prev_centroids, *local_curr_centroids = curr_centroids;
     double curr_distance;
+    int i;
 
-    for(int i = 0; i < k; i++) {
+     for (i = 0; i < k; i++) {
         curr_distance = calculate_euclidean_distance(local_prev_centroids, local_curr_centroids);
         if (curr_distance >= EPSILON) return 0;
         local_prev_centroids = local_prev_centroids->next;
@@ -262,8 +266,9 @@ int assign_datapoint_to_closest_cluster(Vector *point_to_assign, Vector *centroi
     int min_index = 0;
     double curr_distance;
     double min_distance = calculate_euclidean_distance(point_to_assign, curr_centroid);
+    int i;
 
-    for (int i = 1; i < k; i++) {
+    for (i = 1; i < k; i++) {
         curr_centroid = curr_centroid->next;
         curr_distance = calculate_euclidean_distance(point_to_assign, curr_centroid);
         if (curr_distance < min_distance) {
@@ -280,17 +285,18 @@ void update_curr_centroids(Vector *prev_centroids, Vector *curr_centroids, Vecto
     Vector *curr_datapoint = datapoints;
     Vector *curr_centroid, *prev_centroid;
     Coordinate *curr_datapoint_coordinate, *curr_centroid_coordinate, *prev_centroid_coordinate;
+    int i, j, m;
 
-    for (int i = 0; i < num_vectors; i++) {
+    for (i = 0; i < num_vectors; i++) {
         curr_centroid = curr_centroids;
-        for (int j = 0; j < assignments[i]; j++) {
+        for (j = 0; j < assignments[i]; j++) {
             curr_centroid = curr_centroid->next;
         }
 
         curr_datapoint_coordinate = curr_datapoint->coordinates;
         curr_centroid_coordinate = curr_centroid->coordinates;
 
-        for (int m = 0; m < dimension; m++) {
+        for (m = 0; m < dimension; m++) {
             curr_centroid_coordinate->value += curr_datapoint_coordinate->value;
             curr_centroid_coordinate = curr_centroid_coordinate->next;
             curr_datapoint_coordinate = curr_datapoint_coordinate->next;
@@ -300,11 +306,11 @@ void update_curr_centroids(Vector *prev_centroids, Vector *curr_centroids, Vecto
 
     prev_centroid = prev_centroids;
     curr_centroid = curr_centroids;
-    for (int i = 0; i < k; i++) {
+    for (i = 0; i < k; i++) {
         prev_centroid_coordinate = prev_centroid->coordinates;
         curr_centroid_coordinate = curr_centroid->coordinates;
         
-        for (int j = 0; j < dimension; j++) {
+        for (j = 0; j < dimension; j++) {
             curr_centroid_coordinate->value = counts[i] > 0 ? (curr_centroid_coordinate->value) / counts[i] : prev_centroid_coordinate->value;
             prev_centroid_coordinate = prev_centroid_coordinate->next;
             curr_centroid_coordinate = curr_centroid_coordinate->next;
@@ -320,6 +326,7 @@ Vector *calculate_centroids_using_kmeans(int k, int maximum_iteration, int num_v
 
     Vector *temp_centroids, *local_prev_centroids = prev_centroids, *local_curr_centroids = curr_centroids, *point_to_assign;
     int converged_flag = 0, iteration_cnt = 0;
+    int i;
 
     init_centroids_as_first_k_datapoints(datapoints, local_prev_centroids, k, dimension);
 
@@ -330,7 +337,7 @@ Vector *calculate_centroids_using_kmeans(int k, int maximum_iteration, int num_v
         point_to_assign = datapoints;
 
         /* Assign each datapoint to the closest cluster */
-        for (int i = 0; i < num_vectors; i++) {
+        for (i = 0; i < num_vectors; i++) {
             assignments[i] = assign_datapoint_to_closest_cluster(point_to_assign, local_prev_centroids, k);
             counts[assignments[i]]++;
             point_to_assign = point_to_assign->next;
