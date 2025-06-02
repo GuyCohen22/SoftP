@@ -256,24 +256,99 @@ int has_converged(Vector *prev_centroids, Vector *curr_centroids, int k) {
     return 1;
 }
 
+/* Assigns a datapoint to the closest cluster and returns the index of that cluster */
+int assign_datapoint_to_closest_cluster(Vector *point_to_assign, Vector *centroids, int k) {
+    Vector *curr_centroid = centroids;
+    int min_index = 0;
+    double curr_distance;
+    double min_distance = calculate_euclidean_distance(point_to_assign, curr_centroid);
+
+    for (int i = 1; i < k; i++) {
+        curr_centroid = curr_centroid->next;
+        curr_distance = calculate_euclidean_distance(point_to_assign, curr_centroid);
+        if (curr_distance < min_distance) {
+            min_distance = curr_distance;
+            min_index = i;
+        }
+    }
+
+    return min_index;
+}
+
+/* Updates the current centroids based on the assignments and counts of datapoints in each cluster */
+void update_curr_centroids(Vector *prev_centroids, Vector *curr_centroids, Vector *datapoints, int *assignments, int *counts, int k, int num_vectors, int dimension) {
+    Vector *curr_datapoint = datapoints;
+    Vector *curr_centroid, *prev_centroid;
+    Coordinate *curr_datapoint_coordinate, *curr_centroid_coordinate, *prev_centroid_coordinate;
+
+    for (int i = 0; i < num_vectors; i++) {
+        curr_centroid = curr_centroids;
+        for (int j = 0; j < assignments[i]; j++) {
+            curr_centroid = curr_centroid->next;
+        }
+
+        curr_datapoint_coordinate = curr_datapoint->coordinates;
+        curr_centroid_coordinate = curr_centroid->coordinates;
+
+        for (int m = 0; m < dimension; m++) {
+            curr_centroid_coordinate->value += curr_datapoint_coordinate->value;
+            curr_centroid_coordinate = curr_centroid_coordinate->next;
+            curr_datapoint_coordinate = curr_datapoint_coordinate->next;
+        }
+        curr_datapoint = curr_datapoint->next;
+    }
+
+    prev_centroid = prev_centroids;
+    curr_centroid = curr_centroids;
+    for (int i = 0; i < k; i++) {
+        prev_centroid_coordinate = prev_centroid->coordinates;
+        curr_centroid_coordinate = curr_centroid->coordinates;
+        
+        for (int j = 0; j < dimension; j++) {
+            curr_centroid_coordinate->value = counts[i] > 0 ? (curr_centroid_coordinate->value) / counts[i] : prev_centroid_coordinate->value;
+            prev_centroid_coordinate = prev_centroid_coordinate->next;
+            curr_centroid_coordinate = curr_centroid_coordinate->next;
+        }
+
+        prev_centroid = prev_centroid->next;
+        curr_centroid = curr_centroid->next;
+    }
+}
+
 /* Returns centroids calculated using the k-means algorithm */
 Vector *calculate_centroids_using_kmeans(int k, int maximum_iteration, int num_vectors, int dimension, Vector *datapoints, Vector *prev_centroids, Vector *curr_centroids, int *assignments, int*counts) {
 
-    Vector *temp_centroids, *local_prev_centroids = prev_centroids, *local_curr_centroids = curr_centroids;
-    int has_converged, iteration_cnt = 0;
+    Vector *temp_centroids, *local_prev_centroids = prev_centroids, *local_curr_centroids = curr_centroids, *point_to_assign;
+    int converged_flag = 0, iteration_cnt = 0;
 
     init_centroids_as_first_k_datapoints(datapoints, local_prev_centroids, k, dimension);
 
-    do
-    {
+    while (iteration_cnt < maximum_iteration && !converged_flag) {
         memset(assignments, 0, sizeof(int) * num_vectors);
         memset(counts, 0, sizeof(int) * k);
         zero_out_centroids(local_curr_centroids, k, dimension);
+        point_to_assign = datapoints;
 
+        /* Assign each datapoint to the closest cluster */
+        for (int i = 0; i < num_vectors; i++) {
+            assignments[i] = assign_datapoint_to_closest_cluster(point_to_assign, local_prev_centroids, k);
+            counts[assignments[i]]++;
+            point_to_assign = point_to_assign->next;
+        }
 
-        
-    } while (condition);
+        /* Calculate new centroids */
+        update_curr_centroids(local_prev_centroids, local_curr_centroids, datapoints, assignments, counts, k, num_vectors, dimension);
+        converged_flag = has_converged(local_prev_centroids, local_curr_centroids, k);
+        iteration_cnt++;
+        if (!converged_flag) {
+            /* Swap the previous and current centroids for the next iteration */
+            temp_centroids = local_prev_centroids;
+            local_prev_centroids = local_curr_centroids;
+            local_curr_centroids = temp_centroids;
+        }
+    }
     
+    return converged_flag ? local_curr_centroids : local_prev_centroids;
 }
 
 /* Prints the centroids matrix in the required format */
@@ -348,7 +423,14 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    result_centroids = calculate_centroids_using_kmeans();
+    result_centroids = calculate_centroids_using_kmeans(k, maximum_iteration, num_vectors, dimension, datapoints, prev_centroids, curr_centroids, assignments, counts);
     print_result(result_centroids);
+
+    free_matrix(datapoints);
+    free_matrix(prev_centroids);
+    free_matrix(curr_centroids);
+    free(assignments);
+    free(counts);
+
     return 0;
 }
